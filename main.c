@@ -6,9 +6,9 @@ HANDLE handle;
 
 unsigned char** firstScan(char* name, int TARGET_VALUE) {
  int foundCounter = 0;
- static unsigned char *ptrArr[MAX_ADDRESSES] = {NULL}; // Array to store found addresses, marked as static
+ static unsigned char *ptrArr[MAX_ADDRESSES] = {NULL};
 
- HWND hwnd = FindWindowA(NULL, name); // Window title of the target process
+ HWND hwnd = FindWindowA(NULL, name);
  if (hwnd == NULL) {
   printf("Cannot find window\n");
   return NULL;
@@ -36,16 +36,13 @@ unsigned char** firstScan(char* name, int TARGET_VALUE) {
    if (mbi.State == MEM_COMMIT && 
       (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_READONLY || mbi.Protect == PAGE_EXECUTE_READWRITE || mbi.Protect == PAGE_EXECUTE_READ)) {
 
-    // Allocate buffer to read memory
     unsigned char *buffer = (unsigned char *)malloc(mbi.RegionSize);
     if (buffer != NULL) {
-     // Read memory region
      if (ReadProcessMemory(handle, addressPtr, buffer, mbi.RegionSize, &bytesRead)) {
       // Search for the target value in the buffer
       for (SIZE_T i = 0; i < bytesRead - sizeof(int); i++) {
        // Ensure that the comparison aligns correctly with the int size
        if (*(int *)(buffer + i) == TARGET_VALUE) {
-        // Store the address where the value was found
         ptrArr[foundCounter++] = addressPtr + i;
         if (foundCounter >= MAX_ADDRESSES) {
          break;
@@ -60,7 +57,7 @@ unsigned char** firstScan(char* name, int TARGET_VALUE) {
    addressPtr += mbi.RegionSize;
   } else {
    // If VirtualQueryEx fails, move to the next page
-   addressPtr += 0x1000; // Skip 4KB
+   addressPtr += 0x1000; // 4KB
   }
  }
  return ptrArr;
@@ -71,14 +68,12 @@ int main(void) {
  printf("First value: ");
  scanf("%d", &target);
 
- // First scan for addresses containing the target value
  unsigned char **arr = firstScan("MySuika", target);
  if (arr == NULL) {
   printf("Error in scanning memory.\n");
   return 1;
  }
 
- // Print initial found addresses
  int i = 0;
  while (arr[i] != NULL) {
   printf("%p\n", arr[i]);
@@ -96,9 +91,7 @@ int main(void) {
 
   // Check each stored address for the new target value
   while (arr[i] != NULL) {
-   // Use ReadProcessMemory to safely read memory at arr[i] in the target process
    if (ReadProcessMemory(handle, arr[i], &tempValue, sizeof(int), NULL)) {
-    // Compare the read value to the target
     if (tempValue == target) {
      arr[newPos++] = arr[i];
     }
@@ -113,7 +106,6 @@ int main(void) {
    m++;
   }
 
-  // Print updated list of found addresses
   i = 0;
   while (arr[i] != NULL) {
    printf("%p\n", arr[i]);
