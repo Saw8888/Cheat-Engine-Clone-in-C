@@ -68,7 +68,7 @@ int main(void) {
  printf("First value: ");
  scanf("%d", &target);
 
- unsigned char **arr = firstScan("MySuika", target);
+ unsigned char **arr = firstScan("Your Target Program", target);
  if (arr == NULL) {
   printf("Error in scanning memory.\n");
   return 1;
